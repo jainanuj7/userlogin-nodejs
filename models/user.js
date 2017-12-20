@@ -1,3 +1,4 @@
+var bcrypt = require('bcrypt');
 var mongoose = require('mongoose');
 mongoose.connect('mongodb://localhost/user-login');
 var db = mongoose.connection;
@@ -9,7 +10,9 @@ var UserSchema = mongoose.Schema({
     index: true
   },
   password: {
-    type: String
+    type: String,
+    bcrypt: true,
+    required: true
   },
   email: {
     type: String,
@@ -25,5 +28,14 @@ var UserSchema = mongoose.Schema({
 var User = module.exports = mongoose.model('User', UserSchema);
 
 module.exports.createUser = function(newUser, callback) {
+  bcrypt.hash(newUser.password, 10, function(err, hash) { //10 = salt
+    if(err) throw err;
+
+    // Set hashed password
+    newUser.password = hash;
+
+    // Create user
+    newUser.save(callback);
+  })
   newUser.save(callback);
 }
